@@ -6,47 +6,436 @@
 <title>Black Force 007 — Mission 1 (Stealth)</title>
 <style>
   :root{
-    --bg:#070707;
-    --wall:#222;
-    --player:#ffcc00;
-    --guard:#ff3b3b;
-    --file:#2ad62a;
-    --exit:#1a9cff;
-    --hud-bg: rgba(255,255,255,0.04);
+    --bg: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    --wall: #1e2a47;
+    --player: #ffcc00;
+    --guard: #ff3b3b;
+    --file: #2ad62a;
+    --exit: #1a9cff;
+    --hud-bg: rgba(10, 15, 30, 0.85);
     --danger: #ff1a1a;
     --muted: #aaa;
     --tile: #0d0d0d;
+    --accent: #ff4d4d;
+    --text-glow: 0 0 10px rgba(255, 77, 77, 0.5);
   }
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#0b0b0b);font-family:Inter,Arial,Helvetica,sans-serif;color:#eee}
-  .wrap{max-width:1100px;margin:18px auto;padding:12px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  header h1{font-size:1.05rem;margin:0;color:#ff4d4d;letter-spacing:0.6px}
-  header p{margin:0;color:var(--muted);font-size:0.86rem}
-  .stage{width:100%;aspect-ratio:16/9;background:linear-gradient(180deg,#0b0b0b,#0f0f0f);border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);position:relative;margin-top:12px;border:2px solid rgba(255,255,255,0.03)}
-  .playfield{position:absolute;inset:0;background:
-    linear-gradient(45deg, rgba(255,255,255,0.01) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255,255,255,0.01) 25%, transparent 25%);
-    background-size: 40px 40px; display:block;}
-  .wall{position:absolute;background:var(--wall);box-shadow:inset 0 0 18px rgba(0,0,0,0.6);border-radius:4px}
-  .player{position:absolute;width:3.6%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff6b3 0%, var(--player) 35%, #b27700 100%);box-shadow:0 6px 18px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#111;font-size:0.9rem}
-  .guard{position:absolute;width:4.6%;aspect-ratio:1;border-radius:50%;background:linear-gradient(180deg,#ff6161,#ff1a1a);box-shadow:0 8px 22px rgba(255,0,0,0.12);display:flex;align-items:center;justify-content:center;color:#1a0101;font-weight:700;font-size:0.9rem}
-  .fov{position:absolute;pointer-events:none;opacity:0.28;mix-blend-mode:screen}
-  .file{position:absolute;width:3.2%;aspect-ratio:1;border-radius:6px;background:linear-gradient(180deg,#3ff978,#17b92a);display:flex;align-items:center;justify-content:center;font-weight:700;color:#022;box-shadow:0 8px 18px rgba(0,0,0,0.4)}
-  .exit{position:absolute;width:4.2%;aspect-ratio:1;border-radius:6px;background:linear-gradient(180deg,#3fb6ff,#0f88e6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#022;box-shadow:0 8px 18px rgba(0,0,0,0.4)}
-  .hud{position:absolute;left:12px;top:12px;background:var(--hud-bg);padding:8px 10px;border-radius:8px;font-size:0.9rem}
-  .hud .row{display:flex;gap:12px;align-items:center}
-  .hud .dot{width:10px;height:10px;border-radius:50%;background:var(--guard);display:inline-block;margin-right:6px}
-  .controls{position:absolute;right:12px;top:12px;background:var(--hud-bg);padding:8px 10px;border-radius:8px;text-align:right;font-size:0.9rem;color:var(--muted)}
-  .small{font-size:0.78rem;color:var(--muted);margin-top:6px}
-  .mobile-controls{position:absolute;left:10px;bottom:12px;display:flex;gap:8px;align-items:center}
-  .btn-joy{width:62px;height:62px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);box-shadow:inset 0 -6px 12px rgba(0,0,0,0.5)}
-  .btn-joy:active{transform:translateY(2px)}
-  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .message{padding:18px 22px;background:linear-gradient(180deg,#0e0e0e,#101010);border:2px solid rgba(255,0,0,0.06);border-radius:10px;box-shadow:0 14px 60px rgba(0,0,0,0.6);font-size:1.1rem}
-  .info-row{display:flex;justify-content:space-between;gap:10px;margin-top:8px;color:var(--muted);font-size:0.86rem}
-  @media(min-width:900px){ .mobile-controls{display:none} .player{width:2.4%} .guard{width:3%} .file{width:2%} .exit{width:2.2%} }
-  .alarm-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 20%, rgba(255,26,26,0.08), transparent 20%);mix-blend-mode:screen;opacity:0;transition:opacity 220ms linear}
-  .alarm-on{opacity:1}
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    font-family: 'Rajdhani', 'Inter', Arial, Helvetica, sans-serif;
+    color:#eee;
+    overflow-x: hidden;
+  }
+  
+  .wrap{
+    max-width:1100px;
+    margin:18px auto;
+    padding:12px;
+  }
+  
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding: 10px 15px;
+    background: rgba(10, 15, 30, 0.7);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    margin-bottom: 15px;
+  }
+  
+  header h1{
+    font-size:1.2rem;
+    margin:0;
+    color:var(--accent);
+    letter-spacing:0.6px;
+    text-shadow: var(--text-glow);
+    font-weight: 700;
+  }
+  
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:0.86rem;
+  }
+  
+  .stage{
+    width:100%;
+    aspect-ratio:16/9;
+    background: linear-gradient(135deg, #0b0b1a 0%, #1a1a3a 100%);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 12px 40px rgba(0,0,0,0.8);
+    position:relative;
+    margin-top:12px;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+  
+  .playfield{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(255, 77, 77, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(26, 156, 255, 0.03) 0%, transparent 50%),
+      linear-gradient(45deg, rgba(255,255,255,0.01) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(255,255,255,0.01) 25%, transparent 25%);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    display:block;
+  }
+  
+  .wall{
+    position:absolute;
+    background:var(--wall);
+    box-shadow:inset 0 0 18px rgba(0,0,0,0.8), 0 0 15px rgba(0, 0, 0, 0.3);
+    border-radius:6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .player{
+    position:absolute;
+    width:3.6%;
+    aspect-ratio:1;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6b3 0%, var(--player) 35%, #b27700 100%);
+    box-shadow:0 6px 18px rgba(0,0,0,0.8), 0 0 15px rgba(255, 204, 0, 0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    color:#111;
+    font-size:0.9rem;
+    z-index: 10;
+    transition: transform 0.2s ease;
+  }
+  
+  .player.moving {
+    transform: scale(1.1);
+  }
+  
+  .guard{
+    position:absolute;
+    width:4.6%;
+    aspect-ratio:1;
+    border-radius:50%;
+    background:linear-gradient(180deg,#ff6161,#ff1a1a);
+    box-shadow:0 8px 22px rgba(255,0,0,0.2), 0 0 10px rgba(255, 59, 59, 0.4);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#1a0101;
+    font-weight:700;
+    font-size:0.9rem;
+    z-index: 5;
+    transition: transform 0.3s ease;
+  }
+  
+  .guard.alert {
+    transform: scale(1.15);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+  }
+  
+  .fov{
+    position:absolute;
+    pointer-events:none;
+    opacity:0.28;
+    mix-blend-mode:screen;
+  }
+  
+  .file{
+    position:absolute;
+    width:3.2%;
+    aspect-ratio:1;
+    border-radius:8px;
+    background:linear-gradient(180deg,#3ff978,#17b92a);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#022;
+    box-shadow:0 8px 18px rgba(0,0,0,0.4), 0 0 15px rgba(42, 214, 42, 0.5);
+    z-index: 5;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  .exit{
+    position:absolute;
+    width:4.2%;
+    aspect-ratio:1;
+    border-radius:8px;
+    background:linear-gradient(180deg,#3fb6ff,#0f88e6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#022;
+    box-shadow:0 8px 18px rgba(0,0,0,0.4), 0 0 15px rgba(26, 156, 255, 0.5);
+    z-index: 5;
+  }
+  
+  .hud{
+    position:absolute;
+    left:12px;
+    top:12px;
+    background:var(--hud-bg);
+    padding:10px 14px;
+    border-radius:10px;
+    font-size:0.9rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+  }
+  
+  .hud .row{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  
+  .hud .dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--guard);
+    display:inline-block;
+    margin-right:6px;
+    box-shadow: 0 0 8px rgba(255, 59, 59, 0.7);
+  }
+  
+  .controls{
+    position:absolute;
+    right:12px;
+    top:12px;
+    background:var(--hud-bg);
+    padding:10px 14px;
+    border-radius:10px;
+    text-align:right;
+    font-size:0.9rem;
+    color:var(--muted);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+  }
+  
+  .small{
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  
+  .mobile-controls{
+    position:absolute;
+    left:10px;
+    bottom:12px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    z-index: 20;
+  }
+  
+  .btn-joy{
+    width:62px;
+    height:62px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter:blur(10px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.1s ease;
+  }
+  
+  .btn-joy:active{
+    transform:scale(0.95);
+    background:rgba(255,255,255,0.15);
+    box-shadow:0 4px 16px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.2);
+  }
+  
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    z-index: 30;
+  }
+  
+  .message{
+    padding:20px 25px;
+    background:linear-gradient(135deg, rgba(20, 25, 45, 0.95), rgba(10, 15, 30, 0.95));
+    border:1px solid rgba(255, 77, 77, 0.2);
+    border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.7);
+    font-size:1.1rem;
+    text-align: center;
+    backdrop-filter: blur(15px);
+    max-width: 80%;
+    animation: fadeIn 0.5s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .info-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:15px;
+    color:var(--muted);
+    font-size:0.86rem;
+    padding: 10px 15px;
+    background: rgba(10, 15, 30, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  @media(min-width:900px){
+    .mobile-controls{display:none}
+    .player{width:2.4%}
+    .guard{width:3%}
+    .file{width:2%}
+    .exit{width:2.2%}
+  }
+  
+  @media (max-width: 768px) {
+    .wrap {
+      padding: 8px;
+      margin: 10px auto;
+    }
+    
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    header h1 {
+      font-size: 1.1rem;
+    }
+    
+    .info-row {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .btn-joy {
+      width: 55px;
+      height: 55px;
+      font-size: 1.3rem;
+    }
+    
+    .hud, .controls {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+  }
+  
+  .alarm-glow{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:radial-gradient(circle at 50% 20%, rgba(255,26,26,0.2), transparent 40%);
+    mix-blend-mode:screen;
+    opacity:0;
+    transition:opacity 0.5s ease;
+    z-index: 15;
+  }
+  
+  .alarm-on{
+    opacity:1;
+    animation: alarmPulse 1s infinite alternate;
+  }
+  
+  @keyframes alarmPulse {
+    from { opacity: 0.3; }
+    to { opacity: 0.7; }
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #ff9900);
+    border-radius: 3px;
+    width: 100%;
+    transition: width 0.3s ease;
+  }
+  
+  .touch-joystick {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+  
+  .joystick-knob {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Score and Level Indicator */
+  .score-display {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hud-bg);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+    display: flex;
+    gap: 15px;
+  }
 </style>
 </head>
 <body>
@@ -67,17 +456,29 @@
       <div id="player" class="player" style="left:8%;top:74%;">P</div>
       <div id="file" class="file" style="left:78%;top:18%;">F</div>
       <div id="exit" class="exit" style="left:90%;top:80%;">E</div>
+      
       <div class="hud" id="hud" style="position:absolute">
         <div class="row"><span class="dot"></span><strong>Guards:</strong> <span id="guards-count">0</span></div>
         <div class="row" style="margin-top:6px"><strong>Time:</strong> <span id="timer">--</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="time-progress"></div>
+        </div>
       </div>
+      
+      <div class="score-display">
+        <div><strong>Score:</strong> <span id="score">0</span></div>
+        <div><strong>Level:</strong> <span id="level">1</span></div>
+      </div>
+      
       <div class="controls" id="controls">
         <div><strong>Controls</strong></div>
         <div class="small">← → ↑ ↓ or WASD</div>
         <div class="small">Stay out of guards' light cones</div>
       </div>
+      
       <div class="overlay"><div id="overlay-msg" class="message" style="display:none"></div></div>
       <div id="alarmGlow" class="alarm-glow"></div>
+      
       <div class="mobile-controls" id="mobileControls" style="display:none">
         <div class="btn-joy" data-dir="left">◀</div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -85,6 +486,10 @@
           <div class="btn-joy" data-dir="down">▼</div>
         </div>
         <div class="btn-joy" data-dir="right">▶</div>
+      </div>
+      
+      <div class="touch-joystick" id="touchJoystick" style="display:none">
+        <div class="joystick-knob" id="joystickKnob"></div>
       </div>
     </div>
   </div>
@@ -105,6 +510,11 @@ const alarmGlow = document.getElementById('alarmGlow');
 const guardsCountEl = document.getElementById('guards-count');
 const timerEl = document.getElementById('timer');
 const mobileControls = document.getElementById('mobileControls');
+const touchJoystick = document.getElementById('touchJoystick');
+const joystickKnob = document.getElementById('joystickKnob');
+const timeProgress = document.getElementById('time-progress');
+const scoreDisplay = document.getElementById('score');
+const levelDisplay = document.getElementById('level');
 
 let pfRect;
 
@@ -236,7 +646,10 @@ let state = {
   grabbed: false,
   timeLeft: 90,
   running:false,
-  alarm:false
+  alarm:false,
+  score: 0,
+  level: 1,
+  moving: false
 };
 
 setElPct(playerEl, state.playerPos.x, state.playerPos.y);
@@ -249,6 +662,10 @@ window.addEventListener('keydown',e=>{
   if(k==='arrowup' || k==='w') keys.up=true;
   if(k==='arrowdown' || k==='s') keys.down=true;
   if(k==='r') resetLevel();
+  
+  // Update player moving state
+  state.moving = keys.left || keys.right || keys.up || keys.down;
+  updatePlayerVisualState();
 });
 window.addEventListener('keyup',e=>{
   const k = e.key.toLowerCase();
@@ -256,8 +673,71 @@ window.addEventListener('keyup',e=>{
   if(k==='arrowright' || k==='d') keys.right=false;
   if(k==='arrowup' || k==='w') keys.up=false;
   if(k==='arrowdown' || k==='s') keys.down=false;
+  
+  // Update player moving state
+  state.moving = keys.left || keys.right || keys.up || keys.down;
+  updatePlayerVisualState();
 });
 
+function updatePlayerVisualState() {
+  if (state.moving) {
+    playerEl.classList.add('moving');
+  } else {
+    playerEl.classList.remove('moving');
+  }
+}
+
+// Enhanced mobile controls with touch joystick
+let touchStartX = 0;
+let touchStartY = 0;
+let joystickActive = false;
+
+touchJoystick.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = touchJoystick.getBoundingClientRect();
+  touchStartX = rect.left + rect.width / 2;
+  touchStartY = rect.top + rect.height / 2;
+  joystickActive = true;
+});
+
+document.addEventListener('touchmove', (e) => {
+  if (!joystickActive) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  
+  // Limit joystick movement
+  const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), 40);
+  const angle = Math.atan2(deltaY, deltaX);
+  
+  const moveX = distance * Math.cos(angle);
+  const moveY = distance * Math.sin(angle);
+  
+  // Update joystick knob position
+  joystickKnob.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  
+  // Determine direction and move player
+  const threshold = 15;
+  keys.left = deltaX < -threshold;
+  keys.right = deltaX > threshold;
+  keys.up = deltaY < -threshold;
+  keys.down = deltaY > threshold;
+  
+  state.moving = keys.left || keys.right || keys.up || keys.down;
+  updatePlayerVisualState();
+});
+
+document.addEventListener('touchend', (e) => {
+  joystickActive = false;
+  joystickKnob.style.transform = 'translate(0, 0)';
+  keys.left = keys.right = keys.up = keys.down = false;
+  state.moving = false;
+  updatePlayerVisualState();
+});
+
+// Original mobile button controls (fallback)
 mobileControls.addEventListener('click', (ev)=>{
   const dir = ev.target.closest('.btn-joy')?.dataset?.dir;
   if(!dir) return;
@@ -282,6 +762,28 @@ function beep(freq=440,dur=0.12,vol=0.06){
     o.start();
     o.stop(audioCtx.currentTime + dur);
   }catch(e){}
+}
+
+// Add ambient sound effects
+function playSound(type) {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  
+  switch(type) {
+    case 'step':
+      beep(200, 0.05, 0.03);
+      break;
+    case 'file':
+      beep(880, 0.2, 0.08);
+      break;
+    case 'alarm':
+      beep(220, 0.6, 0.12);
+      break;
+    case 'success':
+      // Play a success chord
+      beep(1320, 0.3, 0.08);
+      setTimeout(() => beep(1760, 0.3, 0.08), 100);
+      break;
+  }
 }
 
 let lastTs=0;
@@ -309,6 +811,11 @@ function tick(ts){
         state.playerPos.y -= dy * state.speed * dt;
       }
       setElPct(playerEl, state.playerPos.x, state.playerPos.y);
+      
+      // Play step sound occasionally
+      if (Math.random() < 0.1) {
+        playSound('step');
+      }
     }
     updateGuards(dt);
     checkDetection();
@@ -316,9 +823,11 @@ function tick(ts){
     const f = getElPct(fileEl);
     if(!state.grabbed && Math.hypot(p.x-f.x,p.y-f.y) < 4.5){
       state.grabbed = true;
+      state.score += 500;
+      scoreDisplay.textContent = state.score;
       fileEl.style.display = 'none';
-      showOverlay('Secret File Retrieved! Now reach the Exit.', 1800);
-      beep(880,0.14,0.08);
+      showOverlay('Secret File Retrieved! +500 points. Now reach the Exit.', 1800);
+      playSound('file');
     }
     const ex = getElPct(exitEl);
     if(state.grabbed && Math.hypot(p.x-ex.x,p.y-ex.y) < 4.8){
@@ -330,6 +839,7 @@ function tick(ts){
       failLevel('Time up! Mission failed.');
     }
     timerEl.textContent = Math.ceil(state.timeLeft) + 's';
+    timeProgress.style.width = (state.timeLeft / 90 * 100) + '%';
   }
 
   requestAnimationFrame(tick);
@@ -422,12 +932,11 @@ function triggerAlarm(go){
   document.getElementById('status').textContent = 'ALARM!';
   overlayMsg.style.display='block';
   overlayMsg.textContent = 'Detected! Mission Failed.';
-  overlayMsg.style.background = 'linear-gradient(180deg,#220000,#120000)';
+  overlayMsg.style.background = 'linear-gradient(135deg, rgba(80, 0, 0, 0.95), rgba(40, 0, 0, 0.95))';
   overlayMsg.style.color = '#ffd6d6';
   alarmGlow.classList.add('alarm-on');
-  beep(220,0.6,0.12);
-  go.el.style.transform = 'scale(1.08)';
-  setTimeout(()=>go.el.style.transform='',300);
+  playSound('alarm');
+  go.el.classList.add('alert');
   alarmTimer = setTimeout(()=>failLevel('You were seen by a guard.'), 800);
 }
 
@@ -436,16 +945,17 @@ function failLevel(reason){
   state.alarm = true;
   document.getElementById('status').textContent = 'Failed';
   showOverlay(reason + ' Press R to retry.', 4000);
-  beep(120,0.4,0.08);
   setTimeout(()=>{ if(!state.grabbed) fileEl.style.display='block'; }, 1000);
 }
 
 function winLevel(){
   state.running = false;
   state.alarm = false;
-  showOverlay('Mission Success! You escaped with the file.', 4000);
+  state.score += Math.ceil(state.timeLeft) * 10;
+  scoreDisplay.textContent = state.score;
+  showOverlay('Mission Success! You escaped with the file. Bonus: ' + (Math.ceil(state.timeLeft) * 10) + ' points', 4000);
   document.getElementById('status').textContent = 'Success';
-  beep(1320,0.4,0.08);
+  playSound('success');
 }
 
 let overlayClear;
@@ -469,6 +979,7 @@ function resetLevel(){
   alarmGlow.classList.remove('alarm-on');
   guardObjects.forEach((go,i)=>{
     go.idx = 0; go.pos.x = go.data.patrol[0].x; go.pos.y = go.data.patrol[0].y;
+    go.el.classList.remove('alert');
   });
   showOverlay('Mission Started! Stay hidden.', 1200);
 }
@@ -478,7 +989,13 @@ function startIfReady(){
   createGuards();
   const pf = PF.getBoundingClientRect();
   document.getElementById('hud').style.left = (pf.left + 12) - pf.left + 'px';
-  if(window.innerWidth < 900) mobileControls.style.display = 'flex';
+  
+  // Show appropriate controls based on device
+  if(window.innerWidth < 900) {
+    mobileControls.style.display = 'flex';
+    touchJoystick.style.display = 'flex';
+  }
+  
   state.running = true;
   state.alarm = false;
   lastTs = 0;
