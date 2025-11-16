@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Black Force 007 — Mission 1 (Stealth)</title>
+<style>
+  :root{
+    --bg:#070707;
+    --wall:#222;
+    --player:#ffcc00;
+    --guard:#ff3b3b;
+    --file:#2ad62a;
+    --exit:#1a9cff;
+    --hud-bg: rgba(255,255,255,0.04);
+    --danger: #ff1a1a;
+    --muted: #aaa;
+    --tile: #0d0d0d;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#0b0b0b);font-family:Inter,Arial,Helvetica,sans-serif;color:#eee}
+  .wrap{max-width:1100px;margin:18px auto;padding:12px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  header h1{font-size:1.05rem;margin:0;color:#ff4d4d;letter-spacing:0.6px}
+  header p{margin:0;color:var(--muted);font-size:0.86rem}
+  .stage{width:100%;aspect-ratio:16/9;background:linear-gradient(180deg,#0b0b0b,#0f0f0f);border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);position:relative;margin-top:12px;border:2px solid rgba(255,255,255,0.03)}
+  .playfield{position:absolute;inset:0;background:
+    linear-gradient(45deg, rgba(255,255,255,0.01) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,0.01) 25%, transparent 25%);
+    background-size: 40px 40px; display:block;}
+  .wall{position:absolute;background:var(--wall);box-shadow:inset 0 0 18px rgba(0,0,0,0.6);border-radius:4px}
+  .player{position:absolute;width:3.6%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff6b3 0%, var(--player) 35%, #b27700 100%);box-shadow:0 6px 18px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#111;font-size:0.9rem}
+  .guard{position:absolute;width:4.6%;aspect-ratio:1;border-radius:50%;background:linear-gradient(180deg,#ff6161,#ff1a1a);box-shadow:0 8px 22px rgba(255,0,0,0.12);display:flex;align-items:center;justify-content:center;color:#1a0101;font-weight:700;font-size:0.9rem}
+  .fov{position:absolute;pointer-events:none;opacity:0.28;mix-blend-mode:screen}
+  .file{position:absolute;width:3.2%;aspect-ratio:1;border-radius:6px;background:linear-gradient(180deg,#3ff978,#17b92a);display:flex;align-items:center;justify-content:center;font-weight:700;color:#022;box-shadow:0 8px 18px rgba(0,0,0,0.4)}
+  .exit{position:absolute;width:4.2%;aspect-ratio:1;border-radius:6px;background:linear-gradient(180deg,#3fb6ff,#0f88e6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#022;box-shadow:0 8px 18px rgba(0,0,0,0.4)}
+  .hud{position:absolute;left:12px;top:12px;background:var(--hud-bg);padding:8px 10px;border-radius:8px;font-size:0.9rem}
+  .hud .row{display:flex;gap:12px;align-items:center}
+  .hud .dot{width:10px;height:10px;border-radius:50%;background:var(--guard);display:inline-block;margin-right:6px}
+  .controls{position:absolute;right:12px;top:12px;background:var(--hud-bg);padding:8px 10px;border-radius:8px;text-align:right;font-size:0.9rem;color:var(--muted)}
+  .small{font-size:0.78rem;color:var(--muted);margin-top:6px}
+  .mobile-controls{position:absolute;left:10px;bottom:12px;display:flex;gap:8px;align-items:center}
+  .btn-joy{width:62px;height:62px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);box-shadow:inset 0 -6px 12px rgba(0,0,0,0.5)}
+  .btn-joy:active{transform:translateY(2px)}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .message{padding:18px 22px;background:linear-gradient(180deg,#0e0e0e,#101010);border:2px solid rgba(255,0,0,0.06);border-radius:10px;box-shadow:0 14px 60px rgba(0,0,0,0.6);font-size:1.1rem}
+  .info-row{display:flex;justify-content:space-between;gap:10px;margin-top:8px;color:var(--muted);font-size:0.86rem}
+  @media(min-width:900px){ .mobile-controls{display:none} .player{width:2.4%} .guard{width:3%} .file{width:2%} .exit{width:2.2%} }
+  .alarm-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 20%, rgba(255,26,26,0.08), transparent 20%);mix-blend-mode:screen;opacity:0;transition:opacity 220ms linear}
+  .alarm-on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>BLACK FORCE 007 — Mission 1 (Stealth)</h1>
+      <p>Mission: Retrieve the Secret File and reach the Exit without being seen.</p>
+    </div>
+    <div>
+      <p style="text-align:right"><strong id="status">Ready</strong></p>
+      <p style="text-align:right;color:var(--muted);font-size:0.85rem">Use arrow keys / WASD (or on-screen buttons)</p>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="playfield" id="playfield">
+      <div id="player" class="player" style="left:8%;top:74%;">P</div>
+      <div id="file" class="file" style="left:78%;top:18%;">F</div>
+      <div id="exit" class="exit" style="left:90%;top:80%;">E</div>
+      <div class="hud" id="hud" style="position:absolute">
+        <div class="row"><span class="dot"></span><strong>Guards:</strong> <span id="guards-count">0</span></div>
+        <div class="row" style="margin-top:6px"><strong>Time:</strong> <span id="timer">--</span></div>
+      </div>
+      <div class="controls" id="controls">
+        <div><strong>Controls</strong></div>
+        <div class="small">← → ↑ ↓ or WASD</div>
+        <div class="small">Stay out of guards' light cones</div>
+      </div>
+      <div class="overlay"><div id="overlay-msg" class="message" style="display:none"></div></div>
+      <div id="alarmGlow" class="alarm-glow"></div>
+      <div class="mobile-controls" id="mobileControls" style="display:none">
+        <div class="btn-joy" data-dir="left">◀</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="btn-joy" data-dir="up">▲</div>
+          <div class="btn-joy" data-dir="down">▼</div>
+        </div>
+        <div class="btn-joy" data-dir="right">▶</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <div>Tips: Move slowly near corners. Use cover behind walls.</div>
+    <div>Developer: Black Force 007 • Stealth Prototype</div>
+  </div>
+</div>
+
+<script>
+const PF = document.getElementById('playfield');
+const playerEl = document.getElementById('player');
+const fileEl = document.getElementById('file');
+const exitEl = document.getElementById('exit');
+const overlayMsg = document.getElementById('overlay-msg');
+const alarmGlow = document.getElementById('alarmGlow');
+const guardsCountEl = document.getElementById('guards-count');
+const timerEl = document.getElementById('timer');
+const mobileControls = document.getElementById('mobileControls');
+
+let pfRect;
+
+function pctToPx(pctX, pctY){
+  const r = PF.getBoundingClientRect();
+  return {x: r.left + (pctX/100)*r.width, y: r.top + (pctY/100)*r.height};
+}
+function setElPct(el, pctX, pctY){
+  el.style.left = pctX + '%';
+  el.style.top = pctY + '%';
+}
+function getElPct(el){
+  return {x: parseFloat(el.style.left), y: parseFloat(el.style.top)};
+}
+
+const walls = [
+  {l:0, t:0, w:100, h:3},
+  {l:0, t:97, w:100, h:3},
+  {l:0, t:0, w:3, h:100},
+  {l:97, t:0, w:3, h:100},
+  {l:10, t:12, w:18, h:6},
+  {l:35, t:8, w:6, h:30},
+  {l:58, t:12, w:30, h:6},
+  {l:22, t:34, w:6, h:30},
+  {l:38, t:46, w:48, h:6},
+  {l:58, t:60, w:6, h:30},
+  {l:14, t:72, w:36, h:6},
+  {l:64, t:76, w:22, h:6}
+];
+
+function createWalls(){
+  for(const w of walls){
+    const d = document.createElement('div');
+    d.className = 'wall';
+    d.style.left = w.l + '%';
+    d.style.top = w.t + '%';
+    d.style.width = w.w + '%';
+    d.style.height = w.h + '%';
+    PF.appendChild(d);
+  }
+}
+
+const guards = [
+  {id:1, patrol:[{x:30,y:18},{x:30,y:34}], facing:90, fov:70, range:26, speed:6},
+  {id:2, patrol:[{x:50,y:26},{x:74,y:26}], facing:0, fov:75, range:30, speed:5},
+  {id:3, patrol:[{x:68,y:52},{x:68,y:34}], facing:270,fov:70, range:26, speed:4},
+  {id:4, patrol:[{x:44,y:78},{x:20,y:78}], facing:90,fov:80, range:30, speed:4.5}
+];
+
+const guardObjects = [];
+
+function createGuards(){
+  for(const g of guards){
+    const el = document.createElement('div');
+    el.className = 'guard';
+    el.textContent = 'G';
+    el.dataset.id = g.id;
+    PF.appendChild(el);
+    const canvas = document.createElement('canvas');
+    canvas.className = 'fov';
+    canvas.style.width = '20%';
+    canvas.style.height = '20%';
+    PF.appendChild(canvas);
+    guardObjects.push({data:g, el, canvas, idx:0, dir:1, pos:{x:g.patrol[0].x,y:g.patrol[0].y}});
+    setElPct(el, g.patrol[0].x, g.patrol[0].y);
+    setElPct(canvas, g.patrol[0].x - g.range/2, g.patrol[0].y - g.range/2);
+  }
+  guardsCountEl.textContent = guardObjects.length;
+}
+
+function rectsIntersect(a,b){
+  return !(a.left + a.width < b.left || b.left + b.width < a.left || a.top + a.height < b.top || b.top + b.height < a.top);
+}
+
+function wallRects(){
+  pfRect = PF.getBoundingClientRect();
+  return walls.map(w=>{
+    return {
+      left: pfRect.left + (w.l/100)*pfRect.width,
+      top: pfRect.top + (w.t/100)*pfRect.height,
+      width: (w.w/100)*pfRect.width,
+      height: (w.h/100)*pfRect.height
+    };
+  });
+}
+
+function pointInWall(x,y){
+  const rects = wallRects();
+  return rects.some(r => x>=r.left && x<=r.left+r.width && y>=r.top && y<=r.top+r.height);
+}
+
+function lineIntersectsWalls(x1,y1,x2,y2){
+  const rects = wallRects();
+  for(const r of rects){
+    if(segmentRectIntersects(x1,y1,x2,y2,r)) return true;
+  }
+  return false;
+}
+function segmentRectIntersects(x1,y1,x2,y2,r){
+  if(x1>=r.left && x1<=r.left+r.width && y1>=r.top && y1<=r.top+r.height) return true;
+  if(x2>=r.left && x2<=r.left+r.width && y2>=r.top && y2<=r.top+r.height) return true;
+  const edges = [
+    {x1:r.left,y1:r.top,x2:r.left+r.width,y2:r.top},
+    {x1:r.left,y1:r.top,x2:r.left,y2:r.top+r.height},
+    {x1:r.left+r.width,y1:r.top,x2:r.left+r.width,y2:r.top+r.height},
+    {x1:r.left,y1:r.top+r.height,x2:r.left+r.width,y2:r.top+r.height}
+  ];
+  for(const e of edges){
+    if(segmentsIntersect(x1,y1,x2,y2,e.x1,e.y1,e.x2,e.y2)) return true;
+  }
+  return false;
+}
+function segmentsIntersect(x1,y1,x2,y2,x3,y3,x4,y4){
+  const d = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+  if(Math.abs(d) < 1e-6) return false;
+  const pre = (x1*y2 - y1*x2), post = (x3*y4 - y3*x4);
+  const xi = ( pre*(x3-x4) - (x1-x2)*post ) / d;
+  const yi = ( pre*(y3-y4) - (y1-y2)*post ) / d;
+  if( (xi < Math.min(x1,x2)-0.0001 || xi > Math.max(x1,x2)+0.0001) ||
+      (xi < Math.min(x3,x4)-0.0001 || xi > Math.max(x3,x4)+0.0001) ) return false;
+  if( (yi < Math.min(y1,y2)-0.0001 || yi > Math.max(y1,y2)+0.0001) ||
+      (yi < Math.min(y3,y4)-0.0001 || yi > Math.max(y3,y4)+0.0001) ) return false;
+  return true;
+}
+
+let state = {
+  playerPos: {x:8, y:74},
+  speed: 22,
+  grabbed: false,
+  timeLeft: 90,
+  running:false,
+  alarm:false
+};
+
+setElPct(playerEl, state.playerPos.x, state.playerPos.y);
+
+const keys = {left:false,right:false,up:false,down:false};
+window.addEventListener('keydown',e=>{
+  const k = e.key.toLowerCase();
+  if(k==='arrowleft' || k==='a') keys.left=true;
+  if(k==='arrowright' || k==='d') keys.right=true;
+  if(k==='arrowup' || k==='w') keys.up=true;
+  if(k==='arrowdown' || k==='s') keys.down=true;
+  if(k==='r') resetLevel();
+});
+window.addEventListener('keyup',e=>{
+  const k = e.key.toLowerCase();
+  if(k==='arrowleft' || k==='a') keys.left=false;
+  if(k==='arrowright' || k==='d') keys.right=false;
+  if(k==='arrowup' || k==='w') keys.up=false;
+  if(k==='arrowdown' || k==='s') keys.down=false;
+});
+
+mobileControls.addEventListener('click', (ev)=>{
+  const dir = ev.target.closest('.btn-joy')?.dataset?.dir;
+  if(!dir) return;
+  const delta = 3.2;
+  if(dir==='left') state.playerPos.x = Math.max(3, state.playerPos.x - delta);
+  if(dir==='right') state.playerPos.x = Math.min(95, state.playerPos.x + delta);
+  if(dir==='up') state.playerPos.y = Math.max(3, state.playerPos.y - delta);
+  if(dir==='down') state.playerPos.y = Math.min(95, state.playerPos.y + delta);
+  setElPct(playerEl, state.playerPos.x, state.playerPos.y);
+});
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function beep(freq=440,dur=0.12,vol=0.06){
+  try{
+    if(!audioCtx) audioCtx = new AudioCtx();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type='sine'; o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + dur);
+  }catch(e){}
+}
+
+let lastTs=0;
+function tick(ts){
+  if(!lastTs) lastTs=ts;
+  const dt = (ts-lastTs)/1000;
+  lastTs = ts;
+
+  if(state.running && !state.alarm){
+    let dx = 0, dy = 0;
+    if(keys.left) dx -= 1;
+    if(keys.right) dx += 1;
+    if(keys.up) dy -= 1;
+    if(keys.down) dy += 1;
+    if(dx!==0 || dy!==0){
+      const len = Math.hypot(dx,dy);
+      dx = dx/len; dy = dy/len;
+      state.playerPos.x += dx * state.speed * dt;
+      state.playerPos.y += dy * state.speed * dt;
+      state.playerPos.x = Math.max(3, Math.min(96, state.playerPos.x));
+      state.playerPos.y = Math.max(3, Math.min(96, state.playerPos.y));
+      const px = pctToPx(state.playerPos.x, state.playerPos.y);
+      if(pointInWall(px.x, px.y)){
+        state.playerPos.x -= dx * state.speed * dt;
+        state.playerPos.y -= dy * state.speed * dt;
+      }
+      setElPct(playerEl, state.playerPos.x, state.playerPos.y);
+    }
+    updateGuards(dt);
+    checkDetection();
+    const p = getElPct(playerEl);
+    const f = getElPct(fileEl);
+    if(!state.grabbed && Math.hypot(p.x-f.x,p.y-f.y) < 4.5){
+      state.grabbed = true;
+      fileEl.style.display = 'none';
+      showOverlay('Secret File Retrieved! Now reach the Exit.', 1800);
+      beep(880,0.14,0.08);
+    }
+    const ex = getElPct(exitEl);
+    if(state.grabbed && Math.hypot(p.x-ex.x,p.y-ex.y) < 4.8){
+      winLevel();
+    }
+    state.timeLeft -= dt;
+    if(state.timeLeft <= 0){
+      state.timeLeft = 0;
+      failLevel('Time up! Mission failed.');
+    }
+    timerEl.textContent = Math.ceil(state.timeLeft) + 's';
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function updateGuards(dt){
+  guardObjects.forEach(go=>{
+    const g = go.data;
+    const target = g.patrol[go.idx];
+    const dx = target.x - go.pos.x;
+    const dy = target.y - go.pos.y;
+    const dist = Math.hypot(dx,dy);
+    if(dist < 0.6){
+      go.idx = (go.idx + 1) % g.patrol.length;
+    } else {
+      const vx = (dx/dist) * g.speed * dt;
+      const vy = (dy/dist) * g.speed * dt;
+      go.pos.x += vx; go.pos.y += vy;
+    }
+    const nextT = g.patrol[go.idx];
+    const ang = Math.atan2(nextT.y - go.pos.y, nextT.x - go.pos.x) * 180 / Math.PI;
+    g.facing = ang;
+    setElPct(go.el, go.pos.x, go.pos.y);
+    drawFOV(go);
+  });
+}
+
+function drawFOV(go){
+  const canvas = go.canvas;
+  const g = go.data;
+  const pf = PF.getBoundingClientRect();
+  const sizePx = (g.range/100) * pf.width;
+  canvas.width = sizePx*1.5; canvas.height = sizePx*1.5;
+  const leftPx = pf.left + (go.pos.x/100)*pf.width - canvas.width*0.5;
+  const topPx = pf.top + (go.pos.y/100)*pf.height - canvas.height*0.5;
+  canvas.style.left = ((leftPx - pf.left)/pf.width*100) + '%';
+  canvas.style.top = ((topPx - pf.top)/pf.height*100) + '%';
+  canvas.style.width = (canvas.width/pf.width*100) + '%';
+  canvas.style.height = (canvas.height/pf.height*100) + '%';
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(g.facing * Math.PI/180);
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  const half = (g.fov/2)*Math.PI/180;
+  ctx.arc(0,0, sizePx*0.75, -half, half);
+  ctx.closePath();
+  const grad = ctx.createRadialGradient(0,0,0,0,0,sizePx*0.75);
+  grad.addColorStop(0,'rgba(255,80,80,0.42)');
+  grad.addColorStop(0.6,'rgba(255,20,20,0.18)');
+  grad.addColorStop(1,'rgba(255,20,20,0.02)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.restore();
+}
+
+function checkDetection(){
+  const p = getElPct(playerEl);
+  const playerPx = pctToPx(p.x,p.y);
+  for(const go of guardObjects){
+    const g = go.data;
+    const guardPx = pctToPx(go.pos.x, go.pos.y);
+    const dx = playerPx.x - guardPx.x;
+    const dy = playerPx.y - guardPx.y;
+    const dist = Math.hypot(dx,dy);
+    const pf = PF.getBoundingClientRect();
+    const rangePx = (g.range/100) * pf.width;
+    if(dist <= rangePx){
+      const angleToPlayer = Math.atan2(dy,dx) * 180 / Math.PI;
+      let diff = angleToPlayer - g.facing;
+      diff = ((diff+180+360)%360) - 180;
+      const withinAngle = Math.abs(diff) <= (g.fov/2);
+      if(withinAngle){
+        if(!lineIntersectsWalls(guardPx.x, guardPx.y, playerPx.x, playerPx.y)){
+          triggerAlarm(go);
+          return;
+        }
+      }
+    }
+  }
+}
+
+let alarmTimer=null;
+function triggerAlarm(go){
+  if(state.alarm) return;
+  state.alarm = true;
+  document.getElementById('status').textContent = 'ALARM!';
+  overlayMsg.style.display='block';
+  overlayMsg.textContent = 'Detected! Mission Failed.';
+  overlayMsg.style.background = 'linear-gradient(180deg,#220000,#120000)';
+  overlayMsg.style.color = '#ffd6d6';
+  alarmGlow.classList.add('alarm-on');
+  beep(220,0.6,0.12);
+  go.el.style.transform = 'scale(1.08)';
+  setTimeout(()=>go.el.style.transform='',300);
+  alarmTimer = setTimeout(()=>failLevel('You were seen by a guard.'), 800);
+}
+
+function failLevel(reason){
+  state.running = false;
+  state.alarm = true;
+  document.getElementById('status').textContent = 'Failed';
+  showOverlay(reason + ' Press R to retry.', 4000);
+  beep(120,0.4,0.08);
+  setTimeout(()=>{ if(!state.grabbed) fileEl.style.display='block'; }, 1000);
+}
+
+function winLevel(){
+  state.running = false;
+  state.alarm = false;
+  showOverlay('Mission Success! You escaped with the file.', 4000);
+  document.getElementById('status').textContent = 'Success';
+  beep(1320,0.4,0.08);
+}
+
+let overlayClear;
+function showOverlay(txt, ms=1600){
+  overlayMsg.style.display='block';
+  overlayMsg.textContent = txt;
+  overlayMsg.style.pointerEvents='none';
+  clearTimeout(overlayClear);
+  overlayClear = setTimeout(()=>{ overlayMsg.style.display='none'; }, ms);
+}
+
+function resetLevel(){
+  state.playerPos = {x:8,y:74};
+  setElPct(playerEl,state.playerPos.x,state.playerPos.y);
+  state.grabbed=false;
+  fileEl.style.display='flex';
+  state.timeLeft = 90;
+  state.running = true;
+  state.alarm = false;
+  document.getElementById('status').textContent = 'Running';
+  alarmGlow.classList.remove('alarm-on');
+  guardObjects.forEach((go,i)=>{
+    go.idx = 0; go.pos.x = go.data.patrol[0].x; go.pos.y = go.data.patrol[0].y;
+  });
+  showOverlay('Mission Started! Stay hidden.', 1200);
+}
+
+function startIfReady(){
+  createWalls();
+  createGuards();
+  const pf = PF.getBoundingClientRect();
+  document.getElementById('hud').style.left = (pf.left + 12) - pf.left + 'px';
+  if(window.innerWidth < 900) mobileControls.style.display = 'flex';
+  state.running = true;
+  state.alarm = false;
+  lastTs = 0;
+  showOverlay('Mission Started! Stay hidden.', 1200);
+  requestAnimationFrame(tick);
+}
+
+window.addEventListener('load', ()=> {
+  startIfReady();
+});
+window.addEventListener('resize', ()=> {
+  guardObjects.forEach(go=> drawFOV(go));
+});
+PF.addEventListener('click', ()=>{
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+});
+let debug = false;
+window.addEventListener('keydown', e=>{
+  if(e.key==='`'){ debug=!debug; console.log('debug',debug); }
+});
+</script>
+</body>
+</html>
